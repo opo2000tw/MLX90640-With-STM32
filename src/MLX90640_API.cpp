@@ -18,6 +18,13 @@
 #include <MLX90640_API.h>
 #include <math.h>
 
+paramsMLX90640 mlx90640;
+uint16_t eeMLX90640[832];
+float mlx90640To[768];
+uint16_t frame[834];
+// float copy_mlx90640To[768];
+float emissivity = 0.95;
+
 void ExtractVDDParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
 void ExtractPTATParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
 void ExtractGainParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);

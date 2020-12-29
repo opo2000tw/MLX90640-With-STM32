@@ -23,6 +23,17 @@ extern "C" {
 
 #define SCALEALPHA 0.000001f
 
+#define MLX_FPS_2HZ   0x02
+#define MLX_FPS_4HZ   0x03
+#define MLX_FPS_8HZ   0x04
+#define MLX_FPS_16HZ  0x05
+#define MLX_FPS_32HZ  0x06
+#define MLX_FPS_64HZ  0x07
+#define MLX_FPS_CAL(x) ((1000 / (1 << (x - 1)))+1)
+#define MLX_ADDR 0x33
+#define MLX_RATE MLX_FPS_64HZ
+#define TA_SHIFT 8 //Default shift for MLX90640 in open air
+
 typedef struct
 {
   int16_t kVdd;
@@ -70,6 +81,14 @@ int MLX90640_GetCurMode(uint8_t slaveAddr);
 int MLX90640_SetInterleavedMode(uint8_t slaveAddr);
 int MLX90640_SetChessMode(uint8_t slaveAddr);
 void MLX90640_BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
+
+extern float copy_mlx90640To[768];
+extern paramsMLX90640 mlx90640;
+extern uint16_t eeMLX90640[832];
+extern float mlx90640To[768];
+extern float emissivity;
+extern uint16_t frame[834];
+
 #ifdef __cplusplus
 }
 #endif

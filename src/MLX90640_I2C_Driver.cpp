@@ -21,7 +21,7 @@
 
 void MLX90640_I2CInit()
 {
-  MX_I2C1_Init();
+  MX_I2C2_Init();
 }
 
 
@@ -33,7 +33,7 @@ int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress, uint16_t nMemAddr
   int ack = 0;
   int cnt = 0;
 
-  ack = HAL_I2C_Mem_Read(&hi2c1, (slaveAddr << 1), startAddress, I2C_MEMADD_SIZE_16BIT, p, nMemAddressRead * 2, 500);
+  ack = HAL_I2C_Mem_Read(THERMAL_CAM_ADDRESS, (slaveAddr << 1), startAddress, I2C_MEMADD_SIZE_16BIT, p, nMemAddressRead * 2, 500);
 
   if (ack != HAL_OK)
   {
@@ -66,7 +66,7 @@ int MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress, uint16_t data)
   cmd[1] = data & 0x00FF;
 
 
-  ack = HAL_I2C_Mem_Write(&hi2c1, sa, writeAddress, I2C_MEMADD_SIZE_16BIT, cmd, sizeof(cmd), 500);
+  ack = HAL_I2C_Mem_Write(THERMAL_CAM_ADDRESS, sa, writeAddress, I2C_MEMADD_SIZE_16BIT, cmd, sizeof(cmd), 500);
 
   if (ack != HAL_OK)
   {
