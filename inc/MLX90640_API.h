@@ -23,12 +23,14 @@ extern "C" {
 
 #define SCALEALPHA 0.000001f
 
-#define MLX_FPS_2HZ   0x02
-#define MLX_FPS_4HZ   0x03
-#define MLX_FPS_8HZ   0x04
-#define MLX_FPS_16HZ  0x05
-#define MLX_FPS_32HZ  0x06
-#define MLX_FPS_64HZ  0x07
+#define MLX_FPS_dot5HZ  (0b000)
+#define MLX_FPS_1HZ     (0b001)
+#define MLX_FPS_2HZ     (0b010)
+#define MLX_FPS_4HZ     (0b011)
+#define MLX_FPS_8HZ     (0b100)
+#define MLX_FPS_16HZ    (0b101)
+#define MLX_FPS_32HZ    (0b110)
+#define MLX_FPS_64HZ    (0b111)
 #define MLX_FPS_CAL(x) ((1000 / (1 << (x - 1)))+1)
 #define MLX_ADDR 0x33
 #define MLX_RATE MLX_FPS_64HZ
@@ -65,6 +67,9 @@ typedef struct
   uint16_t outlierPixels[5];
 } paramsMLX90640;
 
+bool MLX90640_I2CCheck(void);
+int MLX90640_SynchFrame(uint8_t slaveAddr);
+int MLX90640_TriggerMeasurement(uint8_t slaveAddr); // no complete
 int MLX90640_DumpEE(uint8_t slaveAddr, uint16_t *eeData);
 int MLX90640_GetFrameData(uint8_t slaveAddr, uint16_t *frameData);
 int MLX90640_ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);

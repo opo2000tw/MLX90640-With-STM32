@@ -18,12 +18,23 @@
 #include "i2c.h"
 #include "MLX90640_I2C_Driver.h"
 
+#define sa7(x) (x << 1)
 
 void MLX90640_I2CInit()
 {
   MX_I2C2_Init();
 }
 
+int MLX90640_I2CGeneralReset(void)
+{
+  uint8_t cmd[1] = {0x06};
+  int ack = HAL_I2C_Mem_Write(THERMAL_CAM_ADDRESS, 0, 0, I2C_MEMADD_SIZE_16BIT, &cmd[0], sizeof(cmd), 500);
+  if (ack != 0x00)
+  {
+    return -1;
+  }
+  return 0;
+}
 
 int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data)
 {
