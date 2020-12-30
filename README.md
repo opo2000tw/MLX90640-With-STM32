@@ -40,7 +40,7 @@ hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
 hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
 * I2C Clock Speed: 400000Hz
-* RefreshRate: <=16Hz (>=32Hz Fail...)
+* RefreshRate: 2~64 Success , 1 and 0.5 not yet test
 ```
 
 # TODO 
