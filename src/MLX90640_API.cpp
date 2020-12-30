@@ -17,6 +17,9 @@
 #include <MLX90640_I2C_Driver.h>
 #include <MLX90640_API.h>
 #include <math.h>
+#if DEBUG == 1
+#include "lwprintf.h"
+#endif
 
 paramsMLX90640 mlx90640;
 uint16_t eeMLX90640[832];
@@ -53,23 +56,46 @@ bool MLX90640_I2CCheck()
     // printf("\r\nSetRefreshRate error with code:%d\r\n", status);
     while (1);
   }
+#if DEBUG == 1
+  else
+  {
+    int threeBits = MLX90640_GetRefreshRate(MLX_ADDR);
+    printf("MLX90640_GetRefreshRate:%d,%dms\r\n", threeBits, MLX_FPS_CAL(threeBits));
+  }
+#endif
   status = MLX90640_SetChessMode(MLX_ADDR);
   if (status != 0)
   {
     // printf("\r\nSetChessMode error with code:%d\r\n", status);
     while (1);
   }
+#if DEBUG == 1
+  else
+  {
+    printf("MLX90640_GetCurMode:%d\r\n", MLX90640_GetCurMode(MLX_ADDR));
+  }
+#endif
   status = MLX90640_DumpEE(MLX_ADDR, eeMLX90640);
   if (status != 0)
   {
     // printf("\r\nload system parameters error with code:%d\r\n", status);
     while (1);
   }
+#if DEBUG == 1
+  else
+  {
+    printf("MLX90640_DumpEE:success\r\n");
+  }
+#endif
   status = MLX90640_ExtractParameters(eeMLX90640, &mlx90640);
   if (status != 0)
   {
     // printf("\r\nParameter extraction failed with error code:%d\r\n", status);
     while (1);
+  }
+  else
+  {
+    printf("MLX90640_ExtractParameters:success\r\n");
   }
   return true;
 }
@@ -562,10 +588,15 @@ void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, flo
       }
 
       To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15f;
-      if (To > 300 || To < 0 || (isnan(To) == 1))
+#if DEBUG == 1
+      if (To > 300 || To <= 0 || (isnan(To) == 1))
       {
         __NOP();
       }
+#endif
+#if RELEASE
+      
+#endif
       result[pixelNumber] = To;
     }
   }
