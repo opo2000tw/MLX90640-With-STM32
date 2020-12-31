@@ -22,6 +22,7 @@ extern "C" {
 #include "main.h"
 
 #define SCALEALPHA 0.000001f
+#define DMA_U8_OUTPUT_SIZE ((768*sizeof(float)))
 
 #define MLX_FPS_dot5HZ  (0b000)
 #define MLX_FPS_1HZ     (0b001)
@@ -67,6 +68,12 @@ typedef struct
   uint16_t outlierPixels[5];
 } paramsMLX90640;
 
+typedef enum
+{
+  BUFFER_A,
+  BUFFER_B
+} BUFFER_TAG_E;
+
 bool MLX90640_I2CCheck(void);
 int MLX90640_SynchFrame(uint8_t slaveAddr);
 int MLX90640_TriggerMeasurement(uint8_t slaveAddr); // no complete
@@ -76,7 +83,7 @@ int MLX90640_ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
 float MLX90640_GetVdd(uint16_t *frameData, const paramsMLX90640 *params);
 float MLX90640_GetTa(uint16_t *frameData, const paramsMLX90640 *params);
 void MLX90640_GetImage(uint16_t *frameData, const paramsMLX90640 *params, float *result);
-void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result);
+void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result, BUFFER_TAG_E tag);
 int MLX90640_SetResolution(uint8_t slaveAddr, uint8_t resolution);
 int MLX90640_GetCurResolution(uint8_t slaveAddr);
 int MLX90640_SetRefreshRate(uint8_t slaveAddr, uint8_t refreshRate);
@@ -87,10 +94,10 @@ int MLX90640_SetInterleavedMode(uint8_t slaveAddr);
 int MLX90640_SetChessMode(uint8_t slaveAddr);
 void MLX90640_BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
 
-extern float copy_mlx90640To[768];
+extern uint8_t buffer_tag;
 extern paramsMLX90640 mlx90640;
 extern uint16_t eeMLX90640[832];
-extern float mlx90640To[768];
+extern float mlx90640To[768*2];
 extern float emissivity;
 extern uint16_t frame[834];
 

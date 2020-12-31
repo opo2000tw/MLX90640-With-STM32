@@ -21,11 +21,12 @@
 #include "lwprintf.h"
 #endif
 
+extern int errEvent;
 paramsMLX90640 mlx90640;
+uint8_t buffer_tag = 0;
+float mlx90640To[768 * 2];
 uint16_t eeMLX90640[832];
-float mlx90640To[768];
 uint16_t frame[834];
-// float copy_mlx90640To[768];
 float emissivity = 0.95;
 
 void ExtractVDDParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
@@ -53,8 +54,8 @@ bool MLX90640_I2CCheck()
   int status = MLX90640_SetRefreshRate(MLX_ADDR, MLX_RATE);
   if (status != 0)
   {
-    // printf("\r\nSetRefreshRate error with code:%d\r\n", status);
-    while (1);
+    printf("\r\nSetRefreshRate error with code:%d\r\n", status);
+    Error_Handler();
   }
 #if DEBUG == 1
   else
@@ -66,8 +67,8 @@ bool MLX90640_I2CCheck()
   status = MLX90640_SetChessMode(MLX_ADDR);
   if (status != 0)
   {
-    // printf("\r\nSetChessMode error with code:%d\r\n", status);
-    while (1);
+    printf("\r\nSetChessMode error with code:%d\r\n", status);
+    Error_Handler();
   }
 #if DEBUG == 1
   else
@@ -78,8 +79,8 @@ bool MLX90640_I2CCheck()
   status = MLX90640_DumpEE(MLX_ADDR, eeMLX90640);
   if (status != 0)
   {
-    // printf("\r\nload system parameters error with code:%d\r\n", status);
-    while (1);
+    printf("\r\nload system parameters error with code:%d\r\n", status);
+    Error_Handler();
   }
 #if DEBUG == 1
   else
@@ -90,8 +91,8 @@ bool MLX90640_I2CCheck()
   status = MLX90640_ExtractParameters(eeMLX90640, &mlx90640);
   if (status != 0)
   {
-    // printf("\r\nParameter extraction failed with error code:%d\r\n", status);
-    while (1);
+    printf("\r\nParameter extraction failed with error code:%d\r\n", status);
+    Error_Handler();
   }
   else
   {
@@ -446,7 +447,7 @@ int MLX90640_GetCurMode(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result)
+void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result, BUFFER_TAG_E tag)
 {
   float vdd;
   float ta;
@@ -591,13 +592,25 @@ void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, flo
 #if DEBUG == 1
       if (To > 300 || To <= 0 || (isnan(To) == 1))
       {
+        errEvent++;
         __NOP();
       }
 #endif
-#if RELEASE
-      
-#endif
-      result[pixelNumber] = To;
+      if (tag == BUFFER_A)
+      {
+        result[pixelNumber] = To;
+      }
+      else if (tag == BUFFER_B)
+      {
+        result[pixelNumber + 768] = To;
+      }
+      else
+      {
+        while (1)
+        {
+          printf("err:BUFFER TAG");
+        }
+      }
     }
   }
 }
