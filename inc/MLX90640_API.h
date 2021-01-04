@@ -23,6 +23,10 @@ extern "C" {
 
 #define SCALEALPHA 0.000001f
 #define DMA_U8_OUTPUT_SIZE ((768*sizeof(float)))
+#define BUFFER_ENABLE 0
+
+#define TEMPERATURE_MAXIMUM (300)
+#define TEMPERATURE_MINIMUM (-20)
 
 #define MLX_FPS_dot5HZ  (0b000)
 #define MLX_FPS_1HZ     (0b001)
@@ -74,6 +78,17 @@ typedef enum
   BUFFER_B
 } BUFFER_TAG_E;
 
+struct mlx_event
+{
+  int i2c;
+  int spi;
+  int frame_check_err;
+  int frame_data_err;
+  int init_err;
+  int vdd_err;
+  int tr_err;
+};
+
 bool MLX90640_I2CCheck(void);
 int MLX90640_SynchFrame(uint8_t slaveAddr);
 int MLX90640_TriggerMeasurement(uint8_t slaveAddr); // no complete
@@ -93,11 +108,16 @@ int MLX90640_GetCurMode(uint8_t slaveAddr);
 int MLX90640_SetInterleavedMode(uint8_t slaveAddr);
 int MLX90640_SetChessMode(uint8_t slaveAddr);
 void MLX90640_BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
+void INLINE_MLX90640_BadPixelsCorrection(uint16_t pixels_cnt, float *to, int mode);
 
 extern uint8_t buffer_tag;
 extern paramsMLX90640 mlx90640;
 extern uint16_t eeMLX90640[832];
+#if BUFFER_ENABLE == 1
 extern float mlx90640To[768*2];
+#else
+extern float mlx90640To[768];
+#endif
 extern float emissivity;
 extern uint16_t frame[834];
 

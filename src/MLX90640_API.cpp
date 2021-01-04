@@ -17,14 +17,16 @@
 #include <MLX90640_I2C_Driver.h>
 #include <MLX90640_API.h>
 #include <math.h>
-#if DEBUG == 1
 #include "lwprintf.h"
-#endif
 
-extern int errEvent;
+struct mlx_event mlx_event;
 paramsMLX90640 mlx90640;
 uint8_t buffer_tag = 0;
-float mlx90640To[768 * 2];
+#if BUFFER_ENABLE == 1
+float mlx90640To[768 * 2]__attribute__((aligned (4))) = {0};
+#else
+float mlx90640To[768]__attribute__ ((aligned (4))) = {0};
+#endif
 uint16_t eeMLX90640[832];
 uint16_t frame[834];
 float emissivity = 0.95;
@@ -589,28 +591,21 @@ void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, flo
       }
 
       To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15f;
-#if DEBUG == 1
-      if (To > 300 || To <= 0 || (isnan(To) == 1))
+      if (To > TEMPERATURE_MAXIMUM || To <= TEMPERATURE_MINIMUM || (isnan(To) == 1))
       {
-        errEvent++;
-        __NOP();
-      }
-#endif
-      if (tag == BUFFER_A)
-      {
-        result[pixelNumber] = To;
-      }
-      else if (tag == BUFFER_B)
-      {
-        result[pixelNumber + 768] = To;
+        // Chess mode
+        INLINE_MLX90640_BadPixelsCorrection(pixelNumber, &mlx90640To[0], 1);
       }
       else
       {
-        while (1)
-        {
-          printf("err:BUFFER TAG");
-        }
+        result[pixelNumber] = To;
       }
+#if DEBUG == 1
+      if (result[pixelNumber] > 300 || result[pixelNumber] <= -50 || (isnan(result[pixelNumber]) == 1))
+      {
+        mlx_event.frame_data_err++;
+      }
+#endif
     }
   }
 }
@@ -777,6 +772,68 @@ int MLX90640_GetSubPageNumber(uint16_t *frameData)
 {
   return frameData[833];
 
+}
+
+//------------------------------------------------------------------------------
+void INLINE_MLX90640_BadPixelsCorrection(uint16_t pixels_cnt, float *to, int mode)
+{
+  // Chess mode
+  if (mode != 1)
+  {
+    return;
+  }
+  float ap[4];
+  uint16_t line = pixels_cnt / 31;
+  uint16_t column = pixels_cnt % 31;
+  if (mode == 1)
+  {
+    if (line == 0)
+    {
+      if (column == 0)
+      {
+        to[pixels_cnt] = to[33];
+      }
+      else if (column == 31)
+      {
+        to[pixels_cnt] = to[62];
+      }
+      else
+      {
+        to[pixels_cnt] = (to[pixels_cnt + 31] + to[pixels_cnt + 33]) / 2.0;
+      }
+    }
+    else if (line == 23)
+    {
+      if (column == 0)
+      {
+        to[pixels_cnt] = to[705];
+      }
+      else if (column == 31)
+      {
+        to[pixels_cnt] = to[734];
+      }
+      else
+      {
+        to[pixels_cnt] = (to[pixels_cnt - 33] + to[pixels_cnt - 31]) / 2.0;
+      }
+    }
+    else if (column == 0)
+    {
+      to[pixels_cnt] = (to[pixels_cnt - 31] + to[pixels_cnt + 33]) / 2.0;
+    }
+    else if (column == 31)
+    {
+      to[pixels_cnt] = (to[pixels_cnt - 33] + to[pixels_cnt + 31]) / 2.0;
+    }
+    else
+    {
+      ap[0] = to[pixels_cnt - 33];
+      ap[1] = to[pixels_cnt - 31];
+      ap[2] = to[pixels_cnt + 31];
+      ap[3] = to[pixels_cnt + 33];
+      to[pixels_cnt] = GetMedian(ap, 4);
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
